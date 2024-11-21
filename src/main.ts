@@ -1,17 +1,30 @@
+import express from "express";
 import QRCode from "qrcode";
 import { WechatyBuilder } from "wechaty";
 import { ChatGPTBot } from "./chatgpt.js";
 
-// Wechaty instance
+// 创建一个 Express 应用，监听 Render 的端口
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("Wechaty ChatGPT Bot is running!");
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ HTTP server is listening on port ${PORT}`);
+});
+
+// Wechaty 实例
 const weChatBot = WechatyBuilder.build({
   name: "my-wechat-bot",
 });
-// ChatGPTBot instance
+
+// ChatGPTBot 实例
 const chatGPTBot = new ChatGPTBot();
 
 async function main() {
   weChatBot
-    // scan QR code for login
     .on("scan", async (qrcode, status) => {
       const url = `https://wechaty.js.org/qrcode/${encodeURIComponent(qrcode)}`;
       console.log(`💡 Scan QR Code in WeChat to login: ${status}\n${url}`);
@@ -19,25 +32,19 @@ async function main() {
         await QRCode.toString(qrcode, { type: "terminal", small: true })
       );
     })
-    // login to WeChat desktop account
     .on("login", async (user: any) => {
       console.log(`✅ User ${user} has logged in`);
       chatGPTBot.setBotName(user.name());
       await chatGPTBot.startGPTBot();
     })
-    // message handler
     .on("message", async (message: any) => {
       try {
-        // prevent accidentally respond to history chat on restart
-        // only respond to message later than chatbot start time
         const msgDate = message.date();
         if (msgDate.getTime() <= chatGPTBot.startTime.getTime()) {
           return;
         }
         console.log(`📨 ${message}`);
-        // handle message for customized task handlers
         await chatGPTBot.onCustimzedTask(message);
-        // handle message for chatGPT bot
         await chatGPTBot.onMessage(message);
       } catch (e) {
         console.error(`❌ ${e}`);
@@ -53,4 +60,5 @@ async function main() {
     );
   }
 }
+
 main();
