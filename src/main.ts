@@ -1,19 +1,6 @@
-import express from "express";
 import QRCode from "qrcode";
 import { WechatyBuilder } from "wechaty";
 import { ChatGPTBot } from "./chatgpt.js";
-
-// 创建一个 Express 应用，监听 Render 的端口
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get("/", (req, res) => {
-  res.send("Wechaty ChatGPT Bot is running!");
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ HTTP server is listening on port ${PORT}`);
-});
 
 // Wechaty 实例
 const weChatBot = WechatyBuilder.build({
